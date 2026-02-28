@@ -1,170 +1,137 @@
 const grid = document.getElementById("setupGrid");
 const startBtn = document.getElementById("startGameBtn");
+const startMoneyInput = document.getElementById("startMoney");
 
-const colorPool = [
-    "#ff1c1c",
-    "#ffe600",
-    "#3498db",
-    "#2ecc71",
-    "#9b59b6",
-    "#e67e22"
-];
-
-const avatarList = [
-"🐶","🐱","🐭","🐹","🐰","🦊","🐻","🐼","🐨",
-"🐯","🦁","🐮","🐷","🐸","🐵","🙈","🙉","🙊",
-"🐔","🐧","🐦","🦉","🦄","🐳","🐺"
-];
+const colorPool = ["#ff1c1c","#ffe600","#3498db","#2ecc71","#9b59b6","#e67e22"];
+const avatarList = ["🐶","🐱","🐭","🐹","🐰","🦊","🐻","🐼","🐨","🐯","🦁","🐮","🐷","🐸","🐵","🙈","🙉","🙊","🐔","🐧","🐦","🦉","🦄","🐳","🐺"];
 
 let players = [];
 
+/* ========================= UTIL ========================= */
 
-/* =========================
-   RANDOM AVATAR KHÔNG TRÙNG
-========================= */
-function getUniqueAvatar(){
-
+function getUniqueAvatar() {
     const used = players.map(p => p.avatar);
     const available = avatarList.filter(a => !used.includes(a));
-
-    if(available.length === 0){
-        return avatarList[Math.floor(Math.random()*avatarList.length)];
-    }
-
-    return available[Math.floor(Math.random()*available.length)];
+    const pool = available.length ? available : avatarList;
+    return pool[Math.floor(Math.random() * pool.length)];
 }
 
+function getUniqueColor() {
+    const used = players.map(p => p.color);
+    const available = colorPool.filter(c => !used.includes(c));
+    if (!available.length) return null;
+    return available[Math.floor(Math.random() * available.length)];
+}
 
-/* =========================
-   CREATE PLAYER
-========================= */
-function createPlayerCard(color="random"){
+/* ========================= PLAYER ========================= */
 
-    if(color==="random"){
-        const usedColors = players.map(p=>p.color);
-        const available = colorPool.filter(c=>!usedColors.includes(c));
-        if(available.length===0) return;
-        color = available[Math.floor(Math.random()*available.length)];
-    }
+function addPlayer() {
+    const color = getUniqueColor();
+    if (!color) return;
 
     players.push({
-        name:"",
-        color:color,
-        avatar:getUniqueAvatar() // tự random ngay khi tạo
+        name: "",
+        color,
+        avatar: getUniqueAvatar()
     });
 
     render();
 }
 
-
-/* =========================
-   REMOVE PLAYER
-========================= */
-function removePlayer(index){
-    players.splice(index,1);
+function removePlayer(index) {
+    players.splice(index, 1);
     render();
 }
 
-
-/* =========================
-   RENDER
-========================= */
-function render(){
-
-    grid.innerHTML="";
-
-    players.forEach((player,index)=>{
-
-        const card = document.createElement("div");
-        card.className="setupCard";
-        card.style.background = `
-        linear-gradient(
-        to bottom,
-        rgba(255,255,255,0.35),
-        ${player.color}
-        )
-        `;
-
-        card.innerHTML=`
-        <div class="avatar">${player.avatar}</div>
-
-        <button class="deleteBtn" onclick="removePlayer(${index})">✕</button>
-
-        <input 
-            type="text" 
-            placeholder="Nhập tên"
-            value="${player.name}"
-            onchange="updateName(${index}, this.value)"
-        >
-
-        <button class="randomAvatarBtn" onclick="randomAvatar(${index})">
-            🎲
-        </button>
-        `;
-
-        grid.appendChild(card);
-    });
-
-    const addCard = document.createElement("div");
-    addCard.className="setupCard addCard";
-    addCard.innerHTML="+";
-    addCard.onclick=()=>createPlayerCard();
-
-    grid.appendChild(addCard);
+function updateName(index, value) {
+    players[index].name = value;
 }
 
-
-/* =========================
-   UPDATE NAME
-========================= */
-function updateName(index,value){
-    players[index].name=value;
-}
-
-
-/* =========================
-   RANDOM AVATAR BUTTON
-========================= */
-function randomAvatar(index){
+function randomAvatar(index) {
     players[index].avatar = getUniqueAvatar();
     render();
 }
 
+/* ========================= RENDER ========================= */
 
-/* =========================
-   START GAME
-========================= */
-startBtn.onclick=()=>{
+function createPlayerCard(player, index) {
+    const card = document.createElement("div");
+    card.className = "setupCard";
+    card.style.background = `
+        linear-gradient(to bottom, rgba(255,255,255,0.35), ${player.color})
+    `;
 
-    const startMoney = parseInt(document.getElementById("startMoney").value);
+    const avatar = document.createElement("div");
+    avatar.className = "avatar";
+    avatar.textContent = player.avatar;
 
-    if(!startMoney || startMoney<=0){
+    const deleteBtn = document.createElement("button");
+    deleteBtn.className = "deleteBtn";
+    deleteBtn.textContent = "✕";
+    deleteBtn.addEventListener("click", () => removePlayer(index));
+
+    const input = document.createElement("input");
+    input.type = "text";
+    input.placeholder = "Nhập tên";
+    input.value = player.name;
+    input.addEventListener("input", e => updateName(index, e.target.value));
+
+    const randomBtn = document.createElement("button");
+    randomBtn.className = "randomAvatarBtn";
+    randomBtn.textContent = "🎲";
+    randomBtn.addEventListener("click", () => randomAvatar(index));
+
+    card.append(avatar, deleteBtn, input, randomBtn);
+    return card;
+}
+
+function render() {
+    grid.innerHTML = "";
+
+    players.forEach((player, index) => {
+        grid.appendChild(createPlayerCard(player, index));
+    });
+
+    const addCard = document.createElement("div");
+    addCard.className = "setupCard addCard";
+    addCard.textContent = "+";
+    addCard.addEventListener("click", addPlayer);
+
+    grid.appendChild(addCard);
+}
+
+/* ========================= START GAME ========================= */
+
+function startGame() {
+    const startMoney = parseInt(startMoneyInput.value);
+
+    if (!startMoney || startMoney <= 0) {
         alert("Nhập tiền hợp lệ");
         return;
     }
 
-    const validPlayers = players.filter(p=>p.name.trim()!=="");
+    const validPlayers = players.filter(p => p.name.trim() !== "");
 
-    if(validPlayers.length<2){
+    if (validPlayers.length < 2) {
         alert("Cần ít nhất 2 người chơi");
         return;
     }
 
-    const finalPlayers = validPlayers.map((p,i)=>({
-        id:i,
-        name:p.name,
-        balance:startMoney,
-        color:p.color,
-        avatar:p.avatar
+    const finalPlayers = validPlayers.map((p, i) => ({
+        id: i,
+        name: p.name,
+        balance: startMoney,
+        color: p.color,
+        avatar: p.avatar
     }));
 
-    localStorage.setItem("players",JSON.stringify(finalPlayers));
-    window.location.href="overview.html";
-};
+    localStorage.setItem("players", JSON.stringify(finalPlayers));
+    window.location.href = "overview.html";
+}
 
+startBtn.addEventListener("click", startGame);
 
-/* =========================
-   INIT
-========================= */
-createPlayerCard();
-createPlayerCard();
+/* ========================= INIT ========================= */
+
+addPlayer();
+addPlayer();

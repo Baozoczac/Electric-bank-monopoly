@@ -1,0 +1,181 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800;900&display=swap');
+
+/* ================= RESET ================= */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    line-height: 1.5;
+    background: #fff;
+    color: #111;
+}
+
+body { 
+    opacity: 0; transform: translateY(10px); 
+    animation: fadeIn 1s ease forwards; 
+} 
+@keyframes fadeIn { 
+    to { opacity: 1; transform: translateY(0); } 
+}
+
+/* ================= HEADER ================= */
+header {
+    padding: 10px;
+}
+
+.header {
+    display: flex;
+    flex-direction: column; /* mobile: logo trên, menu dưới */
+    align-items: center;
+    gap: 15px;
+}
+
+.logo {
+    font-size: 1.8rem;
+    font-weight: bold;
+    text-decoration: none;
+    color: #111;
+}
+
+.logo .dot {
+    color: #ff4d4d;
+}
+
+/* ================= HERO ================= */
+.hero {
+    padding: 26px 20px;
+    position: relative;
+    min-height: 60vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.intro {
+    text-align: center;
+    font-size: 16px;
+    margin-bottom: 20px;
+    opacity: 0.8;
+}
+
+.title-wrapper {
+    text-align: center;
+    position: relative;
+}
+
+.title-main,
+.title-outline {
+    font-size: clamp(36px, 10vw, 120px);
+    font-weight: 900;
+    line-height: 1;
+}
+
+.title-outline {
+    color: transparent;
+    -webkit-text-stroke: 1px #111;
+}
+
+/* ================= BUTTONS ================= */
+.buttons {
+    display: flex;
+    flex-direction: column; /* mobile: nút dọc */
+    gap: 15px;
+    margin-top: 30px;
+    align-items: center;
+}
+
+.btn {
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    border: none;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.25s ease;
+    width: 100%;
+    max-width: 280px;
+    text-align: center;
+}
+
+/* Primary */
+.btn.primary {
+    background: #111;
+    color: white;
+}
+
+.btn.primary:hover {
+    background: #000;
+    transform: translateY(-3px);
+}
+
+/* Outline */
+.btn.outline {
+    background: transparent;
+    border: 1px solid #111;
+    color: #111;
+}
+
+.btn.outline:hover {
+    background: #111;
+    color: white;
+    transform: translateY(-3px);
+}
+
+/* ================= IMAGE ================= */
+.image-wrapper {
+    position: relative;
+    margin-top: 40px;
+    text-align: center;
+}
+
+.image-wrapper img {
+    width: 70%;
+    max-height: 350px;
+    height: auto;
+}
+
+/* ================= RESPONSIVE ================= */
+@media (min-width: 768px) {
+    .header {
+        flex-direction: row; /* tablet trở lên: logo trái, menu phải */
+        justify-content: space-between;
+    }
+
+    .nav {
+        flex-direction: row;
+        gap: 20px;
+    }
+
+    .hero {
+        padding: 0px 80px;
+        min-height: 80vh;
+    }
+
+    .buttons {
+        flex-direction: row; /* nút ngang */
+        justify-content: right;
+    }
+
+    .image-wrapper {
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    .image-wrapper img {
+        max-height: 370px;
+    }
+}
+
+@media (min-width: 1024px) {
+    .title-main,
+    .title-outline {
+        font-size: clamp(60px, 8vw, 140px);
+    }
+}

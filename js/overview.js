@@ -1,38 +1,59 @@
-const grid = document.getElementById("playersGrid");
+    const grid = document.getElementById("playersGrid");
 
-const players = JSON.parse(localStorage.getItem("players"));
+    function loadPlayers() {
+        const data = localStorage.getItem("players");
+        if (!data) return null;
+        return JSON.parse(data);
+    }
 
-if(!players){
-    window.location.href = "setup.html";
-}
+    function redirectToSetup() {
+        window.location.href = "setup.html";
+    }
 
-players.forEach((player,setup)=>{
+    function createCard(player, index) {
+        const card = document.createElement("div");
+        card.className = "bankCard";
+        card.style.background = `
+            linear-gradient(to bottom, rgba(255,255,255,0.35), ${player.color})
+        `;
 
-    const card = document.createElement("div");
-card.className = "bankCard";
-card.style.background = `
-    linear-gradient(
-        to bottom,
-        rgba(255,255,255,0.35),
-        ${player.color}
-    )
-`;
+        const avatar = document.createElement("div");
+        avatar.className = "avatar";
+        avatar.textContent = player.avatar;
 
-card.innerHTML = `
+        const name = document.createElement("div");
+        name.className = "nameBox";
+        name.textContent = player.name;
 
-    <div class="avatar">${player.avatar}</div>
-    <div class="nameBox">${player.name}</div>
-    <div class="money">${player.balance.toLocaleString()}$</div>
-`;
+        const money = document.createElement("div");
+        money.className = "money";
+        money.textContent = player.balance.toLocaleString() + "$";
 
-    card.onclick = ()=>{
-        localStorage.setItem("selectedPlayer", setup);
-        window.location.href = "detail.html";
-    };
+        card.append(avatar, name, money);
 
-    grid.appendChild(card);
-});
+        card.addEventListener("click", () => {
+            localStorage.setItem("selectedPlayer", index);
+            window.location.href = "detail.html";
+        });
 
-function goBack(){
-    window.location.href = "setup.html";
-}
+        return card;
+    }
+
+    function render(players) {
+        grid.innerHTML = "";
+        players.forEach((player, index) => {
+            grid.appendChild(createCard(player, index));
+        });
+    }
+
+    const players = loadPlayers();
+
+    if (!players) {
+        redirectToSetup();
+    } else {
+        render(players);
+    }
+
+    function goBack() {
+        redirectToSetup();
+    }

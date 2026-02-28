@@ -1,178 +1,83 @@
 const container = document.getElementById("detailContainer");
 
-let players = JSON.parse(localStorage.getItem("players"));
-const selectedIndex = parseInt(localStorage.getItem("selectedPlayer"));
-
-if (!players || isNaN(selectedIndex)) {
-    window.location.href = "index.html";
+function loadGameData() {
+    const players = JSON.parse(localStorage.getItem("players"));
+    const selectedIndex = parseInt(localStorage.getItem("selectedPlayer"));
+    if (!players || isNaN(selectedIndex)) return null;
+    return { players, selectedIndex };
 }
 
+const data = loadGameData();
+
+if (!data) {
+    window.location.href = "overview.html";
+}
+
+let { players, selectedIndex } = data;
 let player = players[selectedIndex];
 
+/* ========================= SAVE ========================= */
 
-/* =========================
-   RENDER UI (chỉ gọi 1 lần)
-========================= */
-function render() {
-    container.innerHTML = `
-        <div class="playerCardDetail" style="
-            background: linear-gradient(
-                to bottom,
-                rgba(255,255,255,0.25),
-                ${player.color}
-            );
-        ">
-            <div class="avatar">${player.avatar}</div>
-            <div class="cardTitle">${player.name}</div>
-            <div class="balanceText">${player.balance.toLocaleString()}$</div>
-        </div>
-
-        <div class="actionPanel">
-            <h2 class="title">NGÂN HÀNG ĐIỆN TỬ</h2>
-
-            <input type="number" id="amountInput" placeholder="Nhập số tiền">
-
-            <div class="buttonRow">
-                <button onclick="addMoney()">Cộng</button>
-                <button onclick="subtractMoney()">Trừ</button>
-            </div>
-
-            <select id="receiverSelect">
-                <option value="">-- Chọn người nhận --</option>
-                ${players.map((p, i) => {
-                    if (i !== selectedIndex) {
-                        return `<option value="${i}">${p.name}</option>`;
-                    }
-                    return "";
-                }).join("")}
-            </select>
-
-            <button class="transferBtn" onclick="transferMoney()">
-                Chuyển tiền
-            </button>
-
-            <button onclick="goBack()">Quay lại</button>
-        </div>
-    `;
-}
-
-
-/* =========================
-   SAVE
-========================= */
 function save() {
     players[selectedIndex] = player;
     localStorage.setItem("players", JSON.stringify(players));
 }
 
+/* ========================= UTIL ========================= */
 
-/* =========================
-   UTIL
-========================= */
 function getAmount() {
     const value = document.getElementById("amountInput").value;
     const amount = parseInt(value);
-
     if (!amount || amount <= 0) {
         alert("Nhập số tiền hợp lệ");
         return null;
     }
-
     return amount;
 }
 
-
-/* =========================
-   COUNT-UP ANIMATION
-========================= */
-function animateBalance(element, start, end, duration = 500) {
+function animateBalance(element, start, end, duration = 400) {
     const startTime = performance.now();
-    const difference = end - start;
+    const diff = end - start;
 
-    function update(currentTime) {
-        const elapsed = currentTime - startTime;
-        const progress = Math.min(elapsed / duration, 1);
-
-        const currentValue = Math.floor(start + difference * progress);
-
-        element.textContent = currentValue.toLocaleString() + "$";
-
-        if (progress < 1) {
-            requestAnimationFrame(update);
-        } else {
-            element.textContent = end.toLocaleString() + "$";
-        }
+    function update(now) {
+        const progress = Math.min((now - startTime) / duration, 1);
+        const current = Math.floor(start + diff * progress);
+        element.textContent = current.toLocaleString() + "$";
+        if (progress < 1) requestAnimationFrame(update);
     }
 
     requestAnimationFrame(update);
 }
 
+/* ========================= ACTIONS ========================= */
 
-/* =========================
-   ADD MONEY
-========================= */
-function addMoney() {
+function addMoney(balanceEl) {
     const amount = getAmount();
     if (!amount) return;
-
-    const balanceEl = document.querySelector(".balanceText");
-    const card = document.querySelector(".playerCardDetail");
 
     const oldBalance = player.balance;
     player.balance += amount;
 
     animateBalance(balanceEl, oldBalance, player.balance);
-
     save();
-
-    // hiệu ứng
-    balanceEl.classList.add("money-pop");
-    card.classList.add("glow-green");
-
-    setTimeout(() => {
-        balanceEl.classList.remove("money-pop");
-        card.classList.remove("glow-green");
-    }, 500);
 }
 
-
-/* =========================
-   SUBTRACT MONEY
-========================= */
-function subtractMoney() {
+function subtractMoney(balanceEl) {
     const amount = getAmount();
     if (!amount) return;
-
     if (player.balance < amount) {
         alert("Không đủ tiền");
         return;
     }
 
-    const balanceEl = document.querySelector(".balanceText");
-    const card = document.querySelector(".playerCardDetail");
-
     const oldBalance = player.balance;
     player.balance -= amount;
 
     animateBalance(balanceEl, oldBalance, player.balance);
-
     save();
-
-    // hiệu ứng
-    card.classList.add("shake", "glow-red");
-    balanceEl.classList.add("money-pop");
-
-    setTimeout(() => {
-        card.classList.remove("shake", "glow-red");
-        balanceEl.classList.remove("money-pop");
-    }, 500);
 }
 
-
-/* =========================
-   TRANSFER
-========================= */
-function transferMoney() {
+function transferMoney(balanceEl) {
     const receiverIndex = document.getElementById("receiverSelect").value;
     const amount = getAmount();
 
@@ -186,35 +91,54 @@ function transferMoney() {
         return;
     }
 
-    const balanceEl = document.querySelector(".balanceText");
-    const card = document.querySelector(".playerCardDetail");
-
     const oldBalance = player.balance;
 
     player.balance -= amount;
     players[receiverIndex].balance += amount;
 
     animateBalance(balanceEl, oldBalance, player.balance);
-
     localStorage.setItem("players", JSON.stringify(players));
-
-    card.classList.add("glow-player");
-
-    setTimeout(() => {
-        card.classList.remove("glow-player");
-    }, 600);
 }
 
+/* ========================= RENDER ========================= */
 
-/* =========================
-   BACK
-========================= */
-function goBack() {
-    window.location.href = "overview.html";
+function render() {
+    container.innerHTML = `
+        <div class="playerCardDetail" style="
+            background: linear-gradient(to bottom, rgba(255,255,255,0.25), ${player.color});
+        ">
+            <div class="avatar">${player.avatar}</div>
+            <div class="cardTitle">${player.name}</div>
+            <div class="balanceText">${player.balance.toLocaleString()}$</div>
+        </div>
+
+        <div class="actionPanel">
+            <h2 class="title">NGÂN HÀNG ĐIỆN TỬ</h2>
+            <input type="number" id="amountInput" placeholder="Nhập số tiền">
+
+            <div class="buttonRow">
+                <button id="addBtn">Cộng</button>
+                <button id="subBtn">Trừ</button>
+            </div>
+
+            <select id="receiverSelect">
+                <option value="">-- Chọn người nhận --</option>
+                ${players.map((p, i) => i !== selectedIndex ? `<option value="${i}">${p.name}</option>` : "").join("")}
+            </select>
+
+            <button id="transferBtn">Chuyển tiền</button>
+            <button id="backBtn">Quay lại</button>
+        </div>
+    `;
+
+    const balanceEl = document.querySelector(".balanceText");
+
+    document.getElementById("addBtn").addEventListener("click", () => addMoney(balanceEl));
+    document.getElementById("subBtn").addEventListener("click", () => subtractMoney(balanceEl));
+    document.getElementById("transferBtn").addEventListener("click", () => transferMoney(balanceEl));
+    document.getElementById("backBtn").addEventListener("click", () => {
+        window.location.href = "overview.html";
+    });
 }
 
-
-/* =========================
-   INIT
-========================= */
 render();
